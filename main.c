@@ -21,14 +21,22 @@
         return arr;
     }
 
-    float** reInitMemArr(float** arr, size_t newM, size_t newN)
+    float** reInitMemArr(float** arr, size_t newM, size_t newN, size_t oldM, size_t oldN)
     {
         size_t i;
-        float** newArr = (float**) realloc(arr, newM * sizeof(float*));
-        for(i = 0; i < newM; i++)
-            newArr[i] = (float*) realloc(newArr[i], newN * sizeof(float));
 
-        return newArr;
+        if (oldM != newM) {
+            arr = (float**) realloc(arr, newM * sizeof(float*));
+
+            for(i = oldM; i < newM; i++)
+                arr[i] = (float*) malloc(newN * sizeof(float));
+        }
+
+        if (oldN != newN)
+            for(i = 0; i < oldM; i++)
+                arr[i] = (float*) realloc(arr[i], newN * sizeof(float));
+
+        return arr;
     }
 
     void freeMemArr(float** arr, size_t m)
@@ -208,19 +216,16 @@
                 printf("Is not valid solution\nMaximum fract: %0.3f (of %3.3f), i: %d\n", maxFract, table[mfI][1], mfI);
 
                 printf("Creating of new constraint\n");
-                m++;
-                table = reInitMemArr(table, m, n);
 
-                for(i = m - 1, j = 2; j < n; j++)
-                    table[i][j] = table[mfI][j] - (float)((int)table[i][1]);
-                table[i][1] = maxFract;
+                table = reInitMemArr(table, m + 1, n, m, n);
+                m++;
 
                 break;
             }
 
         } while(!isCase);
 
-        drawArr(table, m, n);
+
     }
 
 int main()
@@ -234,7 +239,7 @@ int main()
 
     initValArr(table, m, n,
         (float[4][4]) {
-            {0, 0, 1, 2},
+            {0, 0, 1, 2, },
             {0, 0, -3, -4},
             {3, 10, 1, 4},
             {4, 8, 3, 2}
