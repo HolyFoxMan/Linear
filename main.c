@@ -173,6 +173,56 @@
         freeMemArr(tmpTable, m);
     }
 
+    void gomoriCalc(float** table, size_t m, size_t n, int toMax, size_t numVars)
+    {
+        size_t i, mfI, j;
+        int isCase, caseValue;
+        float fract, maxFract;
+
+        do {
+
+        simplexCalc(table, m, n, toMax, 0);
+        printf("\nGomori method part\n");
+
+        isCase = 1;
+        maxFract = 0.0f;
+
+        printf("Checking validation of solution\n");
+        for(i = 1; i < m; i++) {
+                fract = table[i][1] - (float)((int)table[i][1]);
+
+                if (fract) {
+                    isCase = 0;
+                    if (maxFract < fract) {
+                        maxFract = fract;
+                        mfI = i;
+                    }
+                    printf("%3.3f is fractional\n", table[i][1]);
+
+            }   else
+                printf("%3.1f is integer\n", table[i][1]);
+        }
+        if (isCase)
+            printf("Is valid solution\n");
+            else {
+                printf("Is not valid solution\nMaximum fract: %0.3f (of %3.3f), i: %d\n", maxFract, table[mfI][1], mfI);
+
+                printf("Creating of new constraint\n");
+                m++;
+                table = reInitMemArr(table, m, n);
+
+                for(i = m - 1, j = 2; j < n; j++)
+                    table[i][j] = table[mfI][j] - (float)((int)table[i][1]);
+                table[i][1] = maxFract;
+
+                break;
+            }
+
+        } while(!isCase);
+
+        drawArr(table, m, n);
+    }
+
 int main()
 {
     float** table;
@@ -191,7 +241,7 @@ int main()
         }
     );
 
-    simplexCalc(table, m, n, 1, 0);
+    gomoriCalc(table, m, n, 1, 4);
 
     freeMemArr(table, m);
 
