@@ -176,7 +176,7 @@
     void gomoriCalc(float** table, size_t m, size_t n, int toMax, size_t numVars)
     {
         size_t i, mfI, j;
-        int isCase, caseValue;
+        int isCase;
         float fract, maxFract;
 
         do {
