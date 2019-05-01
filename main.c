@@ -188,15 +188,16 @@
         float fract, maxFract;
 
         do {
+// 1
+            simplexCalc(table, m, n, toMax, 0);
 
-        simplexCalc(table, m, n, toMax, 0);
-        printf("\nGomori method part\n");
+// 2
+            printf("\nGomori method part\nChecking validation of solution\n");
 
-        isCase = 1;
-        maxFract = 0.0f;
+            isCase = 1;
+            maxFract = 0.0f;
 
-        printf("Checking validation of solution\n");
-        for(i = 1; i < m; i++) {
+            for(i = 2; i < m; i++) {
                 fract = table[i][1] - (float)((int)table[i][1]);
 
                 if (fract) {
@@ -205,29 +206,43 @@
                         maxFract = fract;
                         mfI = i;
                     }
+
                     printf("%3.3f is fractional\n", table[i][1]);
 
-            }   else
+                }   else
+
                 printf("%3.1f is integer\n", table[i][1]);
-        }
-        if (isCase)
-            printf("Is valid solution\n");
+            }
+// 3:1
+            if (isCase)
+                printf("Is valid solution\n");
+// 3:2
             else {
-                printf("Is not valid solution\nMaximum fract: %0.3f (of %3.3f), i: %d\n", maxFract, table[mfI][1], mfI);
+                printf("Is not valid solution\nMaximum fract: %0.3f (of %3.3f), i: %d (X%1.0f)\n", maxFract, table[mfI][1], mfI, table[mfI][0]);
 
                 printf("Creating of new constraint\n");
 
+                i = m;
                 m++;
-                table = reInitMemArr(table, m, n, m - 1, n);
+                table = reInitMemArr(table, m, n, i, n);    // i is old rows number
 
-                table[m - 1][1] = -maxFract;
+                table[i][0] = ++numVars;    // set new variable name (id)
+
+                for (j = 1; j < n; j++) {
+                    fract = table[mfI][j] - (float)( (int)table[mfI][j] );
+                    if (fract > 0)
+                        table[i][j] = -fract;
+                    else if (fract < 0)
+                        table[i][j] = -(1.0f + fract);
+                    else
+                        table[i][j] = 0;
+                }
 
                 drawArr(table, m, n);
                 break;
             }
 
         } while(!isCase);
-
 
     }
 
@@ -240,6 +255,7 @@ int main()
     n = 4;
     table = initMemArr(m, n);
 
+    /*
     initValArr(table, m, n,
         (float[4][4]) {
             {0, 0, 1, 2, },
@@ -248,6 +264,17 @@ int main()
             {4, 8, 3, 2}
         }
     );
+*/
+
+    initValArr(table, m, n,
+        (float[4][4]) {
+            {0, 0, 1, 2, },
+            {0, 0, -3, -4},
+            {3, 10, 1, 4},
+            {4, 8, 3, 2}
+        }
+    );
+
 
     gomoriCalc(table, m, n, 1, 4);
 
