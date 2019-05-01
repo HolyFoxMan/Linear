@@ -217,9 +217,12 @@
 
                 printf("Creating of new constraint\n");
 
-                table = reInitMemArr(table, m + 1, n, m, n);
                 m++;
+                table = reInitMemArr(table, m, n, m - 1, n);
 
+                table[m - 1][1] = -maxFract;
+
+                drawArr(table, m, n);
                 break;
             }
 
