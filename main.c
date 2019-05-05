@@ -169,7 +169,7 @@
             }
          }
 
-         if (firstNoCheck) {
+         if (firstNoCheck) {    // we didn't find positive number in row vector under key element
             printf("There is no optimal plan\n");
             break;
          }
