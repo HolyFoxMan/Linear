@@ -78,6 +78,15 @@
                 trgArr[i][j] = srcArr[i][j];
     }
 
+    void convPosNull(float** arr, size_t m, size_t n)
+    {
+        size_t i, j;
+        for(i = 0; i < m; i++)
+            for(j = 0; j < n; j++)
+                if (arr[i][j] == -0.0f)
+                    arr[i][j] = 0.0f;
+    }
+
     /* ---------------------------------------- */
 
     int simplexCalc(float** table, size_t m, size_t n, int toMax, int invIndexColumnSigns)
@@ -98,7 +107,7 @@
             for(j = 1; j < n; j++) {
                 table[1][j] = -table[1][j];
 
-                if (table[1][j] == -0)
+                if (table[1][j] == -0.0f)
                     table[1][j] = 0;
             }
         }
@@ -129,6 +138,7 @@
                         un = table[1][j];
                         kJ = j;
                     }
+
                 if (un == -1)
                     isOpt = 1;
             }
@@ -147,7 +157,9 @@
             break;  // end of loop
         }
         printf("Its not optimized case plan\n");
+    #ifdef _DEBUG_
         getchar();
+    #endif
         printf("[Iteration %d]\n", it);
 
          /* Getting key row */
@@ -159,8 +171,6 @@
                 continue;
 
             tmpUn = table[i][1] / table[i][kJ];
-            if (tmpUn < 0)
-                tmpUn = -tmpUn;
 
             if (firstNoCheck || tmpUn < un) {
                 un = tmpUn;
@@ -201,7 +211,7 @@
                 else
                     tmpTable[i][j] = (table[i][j] * table[kI][kJ] - table[kI][j] * table[i][kJ]) / table[kI][kJ];
 
-                if (tmpTable[i][j] == -0)
+                if (tmpTable[i][j] == -0.0f)
                     tmpTable[i][j] = 0;
             }
 
@@ -212,7 +222,10 @@
 
         }   /* End of iteration */
         freeMemArr(tmpTable, m);
-        getchar();
+
+        #ifdef _DEBUG_
+            getchar();
+        #endif
 
         if (firstNoCheck)
             return 1;
@@ -230,6 +243,7 @@
         tmpTable = initMemArr(m, n);
         /* we think, is not optimized on start part */
         isOpt = 0;
+        printf("Dual simplex method calculation\n");
 
 // 0
         if (invIndexColumnSigns) {
@@ -237,7 +251,7 @@
             for(j = 1; j < n; j++) {
                 table[1][j] = -table[1][j];
 
-                if (table[1][j] == -0)
+                if (table[1][j] == -0.0f)
                     table[1][j] = 0;
             }
         }
@@ -270,7 +284,9 @@
         }
 
         printf("Its not optimal case plan\n");
+    #ifdef _DEBUG_
         getchar();
+    #endif
         printf("[Iteration %d]\n", it);
 
 // 3
@@ -319,7 +335,7 @@
                 else
                     tmpTable[i][j] = (table[i][j] * table[kI][kJ] - table[kI][j] * table[i][kJ]) / table[kI][kJ];
 
-                if (tmpTable[i][j] == -0)
+                if (tmpTable[i][j] == -0.0f)
                     tmpTable[i][j] = 0;
             }
 
@@ -330,7 +346,9 @@
 
         }   /* End of iteration */
         freeMemArr(tmpTable, m);
+    #ifdef _DEBUG_
         getchar();
+    #endif
 
         if (firstNoCheck)
             return 1;
@@ -401,11 +419,15 @@
                         table[i][j] = -(1.0f + fract);
                     else
                         table[i][j] = 0;
+
                 }
 
                 drawArr(table, m, n);
 
             }
+    #ifdef _DEBUG_
+            getchar();
+    #endif
             if (dSimplexCalc(table, m, n, invertDS)) // to min and invert if its max by once stage
                 return 1;
             if (invertDS)
@@ -416,6 +438,10 @@
 
 int main()
 {
+    #ifdef _DEBUG_
+        printf("Debug mode on\n");
+    #endif
+
     float** table;
     size_t m, n;
 
