@@ -84,7 +84,7 @@
     {
         float** tmpTable,
             un, tmpUn;
-        size_t i, j, kI, kJ;
+        size_t i, j, kI, kJ, it;
         int isOpt, firstNoCheck;
 
         tmpTable = initMemArr(m, n);
@@ -92,24 +92,26 @@
         isOpt = 0;
 
         printf("Simplex calculation by %s extremum.\n", toMax? "max" : "min");
-
+// 0
         if (invIndexColumnSigns) {
-            for(j = 2; j < m; j++)
+            printf("Inverting signs of target function values\n");
+            for(j = 1; j < n; j++) {
                 table[1][j] = -table[1][j];
 
-            if (table[1][j] == -0)
-                table[1][j] = 0;
+                if (table[1][j] == -0)
+                    table[1][j] = 0;
+            }
         }
 
-        for(;;) {
+        for(it = 0;; it++) {    // iteration number inc
 
             drawArr(table, m, n);
-
-            /* Getting key column and checking table by optimization aspect*/
-            if (toMax) {
+// 1:1
+            /* Getting key column and checking table by optimization */
+            if (toMax) {    // getting least value
                 un = 1;
                 for(j = 2; j < n; j++)
-                    if (table[1][j] < 0 && table[1][j] < un) {
+                    if (table[1][j] < 0.0f && table[1][j] < un) {
                         un = table[1][j];
                         kJ = j;
                     }
@@ -118,7 +120,8 @@
                     isOpt = 1;
 
             /* is to min */
-            } else {
+// 1:2
+            } else {        // getting highest value
 
                 un = -1;
                 for(j = 2; j < n; j++)
@@ -137,18 +140,24 @@
         for(j = 2; j < n; j++)
             printf("X%.0f = 0, ", table[0][j]);
         printf("F(X) = %3.3f\n", table[1][1]);
+
         /*if its optimized, then finish from simplex-method */
         if (isOpt) {
             printf("Its optimized case plan\n");
-            break;
-        } else
-            printf("Its not optimized case plan\n");
+            break;  // end of loop
+        }
+        printf("Its not optimized case plan\n");
+        getchar();
+        printf("[Iteration %d]\n", it);
 
          /* Getting key row */
-
+// 2
          firstNoCheck = 1;
 
          for(i = 2; i < n; i++) {
+            if (table[i][kJ] <= 0)
+                continue;
+
             tmpUn = table[i][1] / table[i][kJ];
             if (tmpUn < 0)
                 tmpUn = -tmpUn;
@@ -160,17 +169,23 @@
             }
          }
 
+         if (firstNoCheck) {
+            printf("There is no optimal plan\n");
+            break;
+         }
+
         printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
         printf("key i: %d, key j: %d\nkey value %3.6f\n", kI - 1, kJ - 1, table[kI][kJ]);
         printf("-----------------------------\n");
 
         /* Creating new simplex table */
         /*swap variable labels by key indexes*/
-
+// 3
         tmpUn = table[0][kJ];
         table[0][kJ] = table[kI][0];
         table[kI][0] = tmpUn;
 
+// 4
         for (i = 1; i < m; i++)
             for(j = 1; j < n; j++) {
                 if (i == kI && j == kJ)
@@ -193,6 +208,7 @@
 
         }   /* End of iteration */
         freeMemArr(tmpTable, m);
+        getchar();
     }
 
     void gomoriCalc(float** table, size_t m, size_t n, int toMax, size_t numVars)
@@ -262,7 +278,7 @@
                 drawArr(table, m, n);
 
             }
-            simplexCalc(table, m, n, 0, invertDS); // to min and invert if its max by once stage
+            simplexCalc(table, m, n, toMax, invertDS); // to min and invert if its max by once stage
             if (invertDS)
                 invertDS = 0;
         }
