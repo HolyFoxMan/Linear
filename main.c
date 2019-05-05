@@ -80,7 +80,7 @@
 
     /* ---------------------------------------- */
 
-    void simplexCalc(float** table, size_t m, size_t n, int toMax, int invIndexColumnSigns)
+    int simplexCalc(float** table, size_t m, size_t n, int toMax, int invIndexColumnSigns)
     {
         float** tmpTable,
             un, tmpUn;
@@ -125,7 +125,7 @@
 
                 un = -1;
                 for(j = 2; j < n; j++)
-                    if (table[1][j] > 0 && table[1][j] > un) {
+                    if (table[1][j] > 0.0f && table[1][j] > un) {
                         un = table[1][j];
                         kJ = j;
                     }
@@ -170,7 +170,11 @@
          }
 
          if (firstNoCheck) {    // we didn't find positive number in row vector under key element
-            printf("There is no optimal plan\n");
+            printf("There is no plans with solve\n");
+            if (toMax)
+                printf("The objective function is unlimited above\n");
+            else
+                 printf("The objective function is unlimited below\n");
             break;
          }
 
@@ -209,9 +213,132 @@
         }   /* End of iteration */
         freeMemArr(tmpTable, m);
         getchar();
+
+        if (firstNoCheck)
+            return 1;
+        else
+            return 0;
     }
 
-    void gomoriCalc(float** table, size_t m, size_t n, int toMax, size_t numVars)
+    int dSimplexCalc(float** table, size_t m, size_t n, int invIndexColumnSigns)
+    {
+        float** tmpTable,
+        un, tmpUn;
+        size_t i, j, kI, kJ, it;
+        int isOpt, firstNoCheck;
+
+        tmpTable = initMemArr(m, n);
+        /* we think, is not optimized on start part */
+        isOpt = 0;
+
+// 0
+        if (invIndexColumnSigns) {
+            printf("Inverting signs of target function values\n");
+            for(j = 1; j < n; j++) {
+                table[1][j] = -table[1][j];
+
+                if (table[1][j] == -0)
+                    table[1][j] = 0;
+            }
+        }
+
+        for(it = 0;; it++) {    // iteration number inc
+
+            drawArr(table, m, n);
+// 1, 2
+        /* Checking for optimal basis and getting key row */
+        isOpt = 1;
+        un = 1;
+        for(i = 2; i < m; i++)
+            if (table[i][1] < 0 && table[i][1] < un) {
+                un = table[i][1];
+                kI = i;
+                isOpt = 0;
+            }
+
+        /* Print case */
+        for(i = 2; i < m; i++)
+            printf("X%.0f = %3.3f, ", table[i][0], table[i][1]);
+        printf("\n");
+        for(j = 2; j < n; j++)
+            printf("X%.0f = 0, ", table[0][j]);
+        printf("F(X) = %3.3f\n", table[1][1]);
+
+        if (isOpt) {
+            printf("Plan is optimal\n");
+            break;
+        }
+
+        printf("Its not optimal case plan\n");
+        getchar();
+        printf("[Iteration %d]\n", it);
+
+// 3
+        /* checking for unsolvable of problem and getting key column */
+        un = 1;
+        firstNoCheck = 1;
+        for(j = 2; j < n; j++) {
+            if (table[kI][j] >= 0)
+                continue;
+
+            tmpUn = table[1][j] / table[kI][j];
+
+            if (firstNoCheck || tmpUn < un) {
+                un = tmpUn;
+                kJ = j;
+                firstNoCheck = 0;
+            }
+        }
+
+        if (firstNoCheck) {
+            printf("There is no plans with solve\nThe dual objective function is unlimited\n");
+            break;
+        }
+
+// 4
+        printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
+        printf("key i: %d, key j: %d\nkey value %3.6f\n", kI - 1, kJ - 1, table[kI][kJ]);
+        printf("-----------------------------\n");
+
+        /* Creating new simplex table */
+        /*swap variable labels by key indexes*/
+
+        tmpUn = table[0][kJ];
+        table[0][kJ] = table[kI][0];
+        table[kI][0] = tmpUn;
+
+// 5
+        for (i = 1; i < m; i++)
+            for(j = 1; j < n; j++) {
+                if (i == kI && j == kJ)
+                    tmpTable[i][j] = 1 / table[i][j];
+                else if (i == kI)
+                    tmpTable[i][j] = table[i][j] / table[i][kJ];
+                else if (j == kJ)
+                    tmpTable[i][j] = -(table[i][j] / table[kI][j]);
+                else
+                    tmpTable[i][j] = (table[i][j] * table[kI][kJ] - table[kI][j] * table[i][kJ]) / table[kI][kJ];
+
+                if (tmpTable[i][j] == -0)
+                    tmpTable[i][j] = 0;
+            }
+
+         /* Move table on main table var */
+            for (i = 1; i < m; i++)
+                for(j = 1; j < n; j++)
+                    table[i][j] = tmpTable[i][j];
+
+        }   /* End of iteration */
+        freeMemArr(tmpTable, m);
+        getchar();
+
+        if (firstNoCheck)
+            return 1;
+        else
+            return 0;
+    }
+
+    int gomoriCalc(float** table, size_t m, size_t n, int toMax, size_t numVars)
     {
         size_t i, mfI, j;
         int isCase, invertDS;
@@ -223,7 +350,8 @@
         else
             invertDS = 0;
 
-        simplexCalc(table, m, n, toMax, 0);
+        if (simplexCalc(table, m, n, toMax, 0))
+            return 1;
 
         for(;;) {
 // 2
@@ -278,11 +406,12 @@
                 drawArr(table, m, n);
 
             }
-            simplexCalc(table, m, n, toMax, invertDS); // to min and invert if its max by once stage
+            if (dSimplexCalc(table, m, n, invertDS)) // to min and invert if its max by once stage
+                return 1;
             if (invertDS)
                 invertDS = 0;
         }
-
+        return 0;
     }
 
 int main()
