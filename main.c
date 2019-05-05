@@ -4,11 +4,25 @@
     void drawArr(float** arr, size_t m, size_t n)
     {
         size_t i, j;
-        for (i = 1; i < m; i++) {
+        printf("*       B\\/     ");
+
+        for (j = 2; j < n; j++)
+            printf("X%1.0f      ", arr[0][j]);
+
+        printf("\nF>   ");
+        for (j = 1; j < n; j++)
+            printf("%7.3f ", arr[1][j]);
+        printf("\n");
+
+        for (i = 2; i < m; i++) {
+                printf("X%1.0f   ", arr[i][0]);
+
             for(j = 1; j < n; j++)
                 printf("%7.3f ", arr[i][j]);
+
             printf("\n");
         }
+        printf("\n");
     }
 
     float** initMemArr(size_t m, size_t n)
@@ -118,11 +132,11 @@
 
         /* Print case */
         for(i = 2; i < m; i++)
-            printf("X%.0f = %3.6f, ", table[i][0], table[i][1]);
+            printf("X%.0f = %3.3f, ", table[i][0], table[i][1]);
         printf("\n");
         for(j = 2; j < n; j++)
             printf("X%.0f = 0, ", table[0][j]);
-        printf("L = %3.6f\n", table[1][1]);
+        printf("F(X) = %3.3f\n", table[1][1]);
         /*if its optimized, then finish from simplex-method */
         if (isOpt) {
             printf("Its optimized case plan\n");
@@ -184,13 +198,18 @@
     void gomoriCalc(float** table, size_t m, size_t n, int toMax, size_t numVars)
     {
         size_t i, mfI, j;
-        int isCase;
+        int isCase, invertDS;
         float fract, maxFract;
-
-        do {
 // 1
-            simplexCalc(table, m, n, toMax, 0);
 
+        if (toMax)
+            invertDS = 1;
+        else
+            invertDS = 0;
+
+        simplexCalc(table, m, n, toMax, 0);
+
+        for(;;) {
 // 2
             printf("\nGomori method part\nChecking validation of solution\n");
 
@@ -214,8 +233,10 @@
                 printf("%3.1f is integer\n", table[i][1]);
             }
 // 3:1
-            if (isCase)
+            if (isCase) {
                 printf("Is valid solution\n");
+                break;  // out of Gomori loop
+            }
 // 3:2
             else {
                 printf("Is not valid solution\nMaximum fract: %0.3f (of %3.3f), i: %d (X%1.0f)\n", maxFract, table[mfI][1], mfI, table[mfI][0]);
@@ -239,10 +260,12 @@
                 }
 
                 drawArr(table, m, n);
-                break;
-            }
 
-        } while(!isCase);
+            }
+            simplexCalc(table, m, n, 0, invertDS); // to min and invert if its max by once stage
+            if (invertDS)
+                invertDS = 0;
+        }
 
     }
 
@@ -258,7 +281,7 @@ int main()
     /*
     initValArr(table, m, n,
         (float[4][4]) {
-            {0, 0, 1, 2, },
+            {0, 0, 1, 2},
             {0, 0, -3, -4},
             {3, 10, 1, 4},
             {4, 8, 3, 2}
@@ -268,7 +291,7 @@ int main()
 
     initValArr(table, m, n,
         (float[4][4]) {
-            {0, 0, 1, 2, },
+            {0, 0, 1, 2},
             {0, 0, -3, -4},
             {3, 10, 1, 4},
             {4, 8, 3, 2}
