@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+    #define FCUT(X) \
+        ( (float) ( ( (int) (((X) + 0.0005f) * 1000) ) / 1000.0f ) )
+
     void drawArr(float** arr, size_t m, size_t n)
     {
         size_t i, j;
@@ -172,6 +175,14 @@
 
             tmpUn = table[i][1] / table[i][kJ];
 
+            if (tmpUn < 0)
+                tmpUn = -tmpUn;
+
+            /* cutting number */
+            tmpUn =  ( (float) ( ( (int) ((tmpUn + 0.0005f) * 1000) ) / 1000.0f ) );
+
+            printf("|%3.3f / %3.3f| = %3.3f\n", table[i][1], table[i][kJ], tmpUn);
+
             if (firstNoCheck || tmpUn < un) {
                 un = tmpUn;
                 kI = i;
@@ -291,13 +302,20 @@
 
 // 3
         /* checking for unsolvable of problem and getting key column */
-        un = 1;
         firstNoCheck = 1;
         for(j = 2; j < n; j++) {
             if (table[kI][j] >= 0)
                 continue;
 
             tmpUn = table[1][j] / table[kI][j];
+
+            if (tmpUn < 0)
+                tmpUn = -tmpUn;
+
+            /* cutting number */
+            tmpUn =  FCUT(tmpUn);
+
+            printf("|%3.3f / %3.3f| = %3.3f \n", table[1][j], table[kI][j], tmpUn);
 
             if (firstNoCheck || tmpUn < un) {
                 un = tmpUn;
@@ -360,7 +378,7 @@
     {
         size_t i, mfI, j;
         int isCase, invertDS;
-        float fract, maxFract;
+        float fract, maxFract, intFract;
 // 1
 
         if (toMax)
@@ -379,7 +397,12 @@
             maxFract = 0.0f;
 
             for(i = 2; i < m; i++) {
-                fract = table[i][1] - (float)((int)table[i][1]);
+
+                intFract = FCUT(table[i][1]);
+                if (!(intFract - (float) ((int) intFract)))
+                    fract = 0;
+                else
+                    fract = table[i][1] - (float)((int)table[i][1]);
 
                 if (fract) {
                     isCase = 0;
@@ -412,7 +435,15 @@
                 table[i][0] = ++numVars;    // set new variable name (id)
 
                 for (j = 1; j < n; j++) {
-                    fract = table[mfI][j] - (float)( (int)table[mfI][j] );
+
+                    maxFract = FCUT(table[mfI][j]);
+                    if (!(maxFract - (float) ((int) maxFract)))
+                        fract = 0;
+                    else
+                    fract = table[mfI][j] - ((float) ((int) table[mfI][j]));
+
+                    printf("on %d: %3.3f ~= %3.3f\n", j, table[mfI][j], fract);
+
                     if (fract > 0)
                         table[i][j] = -fract;
                     else if (fract < 0)
@@ -468,7 +499,6 @@ int main()
             {4, 8, 3, 2}
         }
     );
-
 
     gomoriCalc(table, m, n, 1, 4);
 
